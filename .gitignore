@@ -19,3 +19,6 @@ Thumbs.db
 
 # Uploads (company logos live outside source control)
 uploads/
+
+# Local H2 database files
+data/
