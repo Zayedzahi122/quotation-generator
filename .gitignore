@@ -22,3 +22,6 @@ uploads/
 
 # Local H2 database files
 data/
+
+# Local build release output
+release/

@@ -2,7 +2,7 @@ spring:
   application:
     name: Quotation-Generator
   datasource:
-    url: jdbc:h2:file:./data/quotdb
+    url: jdbc:h2:file:${user.home}/.quotation-generator/data/quotdb
     driver-class-name: org.h2.Driver
     username: sa
     password:
@@ -29,4 +29,4 @@ quotation:
   vat:
     rate: 0.05
   storage:
-    logo-dir: ./uploads/logos
+    logo-dir: ${user.home}/.quotation-generator/uploads/logos
