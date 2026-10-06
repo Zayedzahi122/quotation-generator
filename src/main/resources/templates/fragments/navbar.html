@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org">
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" th:href="@{/}">Quotation Generator</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" th:href="@{/quotations}">Quotations</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/customers}">Customers</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/products}">Products</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/profile}">Company</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/quotations/new}">New Quotation</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+</html>

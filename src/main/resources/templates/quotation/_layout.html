@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" th:fragment="document">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="'Quotation ' + ${quotation.number}">Quotation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .q-doc, .q-doc.is-dark { background: #fff !important; color: #1f2937 !important; }
+            .q-card, .is-dark .q-card { background: #fff !important; border: none !important; box-shadow: none !important; color: #1f2937 !important; }
+            .is-dark .q-detail, .is-dark .q-label, .is-dark .q-muted { color: #4b5563 !important; }
+            .is-dark .q-table td, .is-dark .q-table th { border-color: #e5e7eb !important; }
+        }
+
+        /* ---------- Page & card ---------- */
+        .q-doc {
+            --accent: #2c3e50;
+            --line: #e5e7eb;
+            --soft: #f8fafc;
+            background: #f1f5f9;
+            color: #1f2937;
+            min-height: 100vh;
+            padding: 1.5rem;
+        }
+        .q-card {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            overflow: hidden;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .q-doc.is-dark { background: #0b1220; color: #e2e8f0; }
+        .is-dark .q-card { background: #111827; border-color: #1f293b; }
+        .is-dark .q-label, .is-dark .q-muted { color: #94a3b8; }
+        .is-dark .q-soft { background: #0b1220 !important; }
+        .is-dark .q-table th { background: var(--accent); color: #fff; }
+        .is-dark .q-table td, .is-dark .q-table th { border-color: #243044 !important; }
+        .is-dark .q-btnbar .btn-outline-secondary { color: #cbd5e1; border-color: #475569; }
+        .is-dark .q-select { background: #1f2937; color: #e2e8f0; border-color: #374151; }
+
+        /* ---------- Header variants ---------- */
+        .q-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+        .q-title { font-size: 1.6rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+        .q-number { opacity: .8; font-size: .95rem; }
+        .q-head-meta { text-align: right; font-size: .95rem; }
+
+        /* banner: full accent bar */
+        .header-banner .q-head { background: var(--accent); color: #fff; padding: 1.4rem 1.6rem; }
+
+        /* underline: white with accent rule */
+        .header-underline .q-head {
+            padding: 1.4rem 1.6rem .9rem;
+            background: #fff;
+            border-bottom: 3px solid var(--accent);
+        }
+        .header-underline .q-title { color: var(--accent); }
+
+        /* boxed: accent frame */
+        .header-boxed .q-head {
+            margin: 1.2rem 1.4rem 0;
+            padding: 1rem 1.2rem;
+            border: 2px solid var(--accent);
+            border-radius: 8px;
+        }
+        .header-boxed .q-title { color: var(--accent); }
+
+        /* split: accent block left, details right */
+        .header-split .q-head { padding: 0; }
+        .header-split .q-head-main {
+            background: var(--accent);
+            color: #fff;
+            padding: 1.4rem 1.6rem;
+            flex: 1;
+        }
+        .header-split .q-head-meta {
+            padding: 1.4rem 1.6rem;
+            background: var(--soft);
+            color: #334155;
+        }
+
+        /* minimal: compact, no chrome */
+        .header-minimal .q-head {
+            padding: 1.1rem 1.6rem .7rem;
+            border-top: 3px solid var(--accent);
+        }
+        .header-minimal .q-title { font-size: 1.15rem; color: var(--accent); }
+
+        /* dark header fixes */
+        .is-dark .header-underline .q-head, .is-dark .header-minimal .q-head { background: transparent; }
+        .is-dark .header-split .q-head-meta { background: #0b1220; color: #cbd5e1; }
+        .is-dark .header-boxed .q-head { background: transparent; }
+
+        /* ---------- From / Bill To ---------- */
+        .q-parties { display: flex; gap: 2rem; padding: 1.4rem 1.6rem .4rem; flex-wrap: wrap; }
+        .q-party { flex: 1; min-width: 240px; }
+        .q-label {
+            font-size: .75rem;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: #6b7280;
+            margin-bottom: .5rem;
+        }
+        /* Logo sits directly above the company name */
+        .q-logo {
+            display: block;
+            max-height: 72px;
+            max-width: 220px;
+            margin-bottom: .55rem;
+            object-fit: contain;
+        }
+        .q-company { font-size: 1.1rem; font-weight: 700; }
+        .q-detail { font-size: .92rem; color: #4b5563; }
+        .is-dark .q-detail { color: #94a3b8; }
+
+        /* ---------- Items table ---------- */
+        .q-table-wrap { padding: .8rem 1.6rem 0; overflow-x: auto; }
+        .q-table { width: 100%; margin-bottom: 0; font-size: .93rem; }
+        .q-table th {
+            background: var(--accent);
+            color: #fff;
+            font-weight: 600;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+        .q-table td { vertical-align: middle; }
+
+        /* bordered: full grid */
+        .table-bordered .q-table td, .table-bordered .q-table th { border: 1px solid var(--line); }
+
+        /* striped: zebra rows */
+        .table-striped .q-table tbody tr:nth-child(even) { background: var(--soft); }
+        .table-striped .q-table td { border-bottom: 1px solid var(--line); }
+
+        /* lines: horizontal rules only */
+        .table-lines .q-table td { border: none; border-bottom: 1px solid var(--line); }
+        .table-lines .q-table th { border: none; border-bottom: 2px solid var(--accent); background: transparent; color: inherit; font-weight: 700; }
+
+        /* minimal: open layout, accent header rule */
+        .table-minimal .q-table td { border: none; }
+        .table-minimal .q-table th { background: transparent; color: inherit; border-bottom: 2px solid var(--accent); }
+        .table-minimal .q-table tbody tr + tr td { border-top: 1px dotted var(--line); }
+
+        /* ---------- Notes & totals ---------- */
+        .q-bottom { display: flex; gap: 1.6rem; padding: 1.3rem 1.6rem; align-items: flex-start; flex-wrap: wrap; }
+        .q-notes { flex: 1; min-width: 240px; font-size: .92rem; }
+        .q-note-box { background: var(--soft); border-left: 3px solid var(--accent); padding: .75rem 1rem; border-radius: 0 6px 6px 0; }
+        .q-totals { width: 320px; margin-left: auto; font-size: .95rem; }
+        .q-tot-row { display: flex; justify-content: space-between; padding: .3rem .1rem; }
+        .q-tot-grand {
+            background: var(--accent);
+            color: #fff;
+            font-weight: 700;
+            padding: .55rem .7rem;
+            border-radius: 6px;
+            margin-top: .4rem;
+            font-size: 1.05rem;
+        }
+
+        /* ---------- Footer & toolbar ---------- */
+        .q-foot {
+            border-top: 1px solid var(--line);
+            padding: .6rem 1.6rem;
+            font-size: .82rem;
+            color: #6b7280;
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+        .is-dark .q-foot { border-color: #1f293b; }
+        .q-btnbar { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; max-width: 1100px; margin: 0 auto 1rem; }
+    </style>
+</head>
+<body class="q-doc"
+      th:classappend="'header-' + ${quotation.layoutType.headerStyle} + ' table-' + ${quotation.layoutType.tableStyle} + (${quotation.layoutType.dark} ? ' is-dark' : '')"
+      th:style="|--accent: ${quotation.layoutType.accent};|">
+
+<div class="q-btnbar no-print">
+    <a class="btn btn-secondary" th:href="@{/quotations}">← Back</a>
+    <a class="btn btn-outline-primary" th:href="@{/quotations/{id}/edit(id=${quotation.id})}">Edit</a>
+    <form method="post" th:action="@{/quotations/{id}/layout(id=${quotation.id})}" class="d-inline">
+        <select class="form-select form-select-sm d-inline-block w-auto q-select" name="layoutType" onchange="this.form.submit()">
+            <option th:each="l : ${layoutTypes}" th:value="${l}" th:text="${l}" th:selected="${quotation.layoutType == l}"></option>
+        </select>
+    </form>
+    <button class="btn btn-outline-success" onclick="window.print()">Print / PDF</button>
+</div>
+
+<div class="q-card">
+    <!-- Header: restyled per layout via header-* classes -->
+    <div class="q-head">
+        <div class="q-head-main">
+            <div class="q-title">Quotation</div>
+            <div class="q-number" th:text="'No: ' + ${quotation.number}">No: RYL-2026-001</div>
+        </div>
+        <div class="q-head-meta">
+            <div><strong>Date:</strong> <span th:text="${quotation.date}"></span></div>
+            <div th:if="${quotation.validUntil}"><strong>Valid Until:</strong> <span th:text="${quotation.validUntil}"></span></div>
+        </div>
+    </div>
+
+    <div class="q-parties">
+        <div class="q-party">
+            <div class="q-label">From</div>
+            <!-- Company logo, shown above the company name -->
+            <img class="q-logo" th:if="${profile.logoFileName != null}"
+                 th:src="@{/logos/{fileName}(fileName=${profile.logoFileName})}" alt="Company logo">
+            <div class="q-company" th:text="${profile.companyName}">Your Company Name</div>
+            <div class="q-detail" th:if="${profile.address}" th:text="${profile.address}"></div>
+            <div class="q-detail" th:if="${profile.phone}" th:text="'Phone: ' + ${profile.phone}"></div>
+            <div class="q-detail" th:if="${profile.email}" th:text="'Email: ' + ${profile.email}"></div>
+        </div>
+        <div class="q-party">
+            <div class="q-label">Bill To</div>
+            <div th:if="${quotation.customer != null}">
+                <div class="q-company" th:text="${quotation.customer.name}"></div>
+                <div class="q-detail" th:if="${quotation.customer.address}" th:text="${quotation.customer.address}"></div>
+                <div class="q-detail" th:if="${quotation.customer.phone}" th:text="'Phone: ' + ${quotation.customer.phone}"></div>
+                <div class="q-detail" th:if="${quotation.customer.email}" th:text="${quotation.customer.email}"></div>
+            </div>
+            <div class="q-detail q-muted" th:if="${quotation.customer == null}">No customer assigned</div>
+        </div>
+    </div>
+
+    <div class="q-table-wrap">
+        <table class="q-table">
+            <thead>
+            <tr>
+                <th style="width: 5%">#</th>
+                <th>Description</th>
+                <th class="text-center" style="width: 7%">Qty</th>
+                <th class="text-end" style="width: 12%">Unit Price (OMR)</th>
+                <th class="text-end" style="width: 12%">Discount (OMR)</th>
+                <th class="text-center" style="width: 7%">VAT</th>
+                <th class="text-end" style="width: 11%">Tax (OMR)</th>
+                <th class="text-end" style="width: 13%">Total (OMR)</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="item, iter : ${quotation.items}">
+                <td th:text="${iter.count}"></td>
+                <td>
+                    <strong th:text="${item.product?.name}"></strong>
+                    <div class="q-muted small" th:if="${item.product?.description}" th:text="${item.product?.description}"></div>
+                </td>
+                <td class="text-center" th:text="${item.quantity}"></td>
+                <td class="text-end" th:text="${#numbers.formatDecimal(item.unitPrice, 1, 3)}"></td>
+                <td class="text-end" th:text="${#numbers.formatDecimal(item.discount, 1, 3)}"></td>
+                <td class="text-center" th:text="${item.vatRate != null ? item.vatPercent + '%' : '-'}"></td>
+                <td class="text-end" th:text="${#numbers.formatDecimal(item.taxAmount, 1, 3)}"></td>
+                <td class="text-end" th:text="${#numbers.formatDecimal(item.lineTotal, 1, 3)}"></td>
+            </tr>
+            <tr th:if="${quotation.items.isEmpty()}">
+                <td colspan="8" class="text-center q-muted py-4">No items added to this quotation</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="q-bottom">
+        <div class="q-notes">
+            <div class="q-label" th:if="${quotation.notes}">Notes</div>
+            <div class="q-note-box" th:if="${quotation.notes}" th:text="${quotation.notes}"></div>
+        </div>
+        <div class="q-totals">
+            <div class="q-tot-row">
+                <span>Subtotal</span>
+                <span th:text="${#numbers.formatDecimal(quotation.subtotal, 1, 3)} + ' OMR'"></span>
+            </div>
+            <div class="q-tot-row" th:if="${quotation.taxAmount != null and quotation.taxAmount > 0}">
+                <span>VAT</span>
+                <span th:text="${#numbers.formatDecimal(quotation.taxAmount, 1, 3)} + ' OMR'"></span>
+            </div>
+            <div class="q-tot-row q-tot-grand">
+                <span>Total</span>
+                <span th:text="${#numbers.formatDecimal(quotation.total, 1, 3)} + ' OMR'"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="q-foot">
+        <span>Layout: <strong th:text="${quotation.layoutType}"></strong></span>
+        <span>Status: <strong th:text="${quotation.status}"></strong></span>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

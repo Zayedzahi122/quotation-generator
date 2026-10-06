@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${quotation.id != null} ? 'Edit Quotation' : 'New Quotation'">Quotation Form</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+<div class="container-fluid px-4 mb-5">
+    <h2 class="fw-bold mb-4" th:text="${quotation.id != null} ? 'Edit Quotation' : 'New Quotation'">Quotation</h2>
+
+    <form th:action="${quotation.id != null} ? @{/quotations/{id}(id=${quotation.id})} : @{/quotations}" method="post" class="card shadow-sm p-4">
+        <input type="hidden" name="id" th:value="${quotation.id}">
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <label class="form-label">Quotation Number</label>
+                <input type="text" class="form-control" name="number" th:value="${quotation.number}" readonly>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Date</label>
+                <input type="date" class="form-control" name="date" th:value="${quotation.date}" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Valid Until</label>
+                <input type="date" class="form-control" name="validUntil" th:value="${quotation.validUntil}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select class="form-select" name="status">
+                    <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}" th:selected="${quotation.status == s}"></option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Customer company name</label>
+                <input type="text" class="form-control" name="customer.name" id="customerName"
+                       list="customerOptions" th:value="${quotation.customer?.name}"
+                       placeholder="Type a name, or pick an existing one">
+                <datalist id="customerOptions">
+                    <option th:each="name : ${customerNames}" th:value="${name}"></option>
+                </datalist>
+                <small class="text-muted">New names are saved as new customers</small>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Address</label>
+                <input type="text" class="form-control" name="customer.address"
+                       th:value="${quotation.customer?.address}" placeholder="Street, city, country">
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Phone number</label>
+                <input type="tel" class="form-control" name="customer.phone"
+                       th:value="${quotation.customer?.phone}" placeholder="+968 ...">
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Email address</label>
+                <input type="email" class="form-control" name="customer.email"
+                       th:value="${quotation.customer?.email}" placeholder="name@company.com">
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Layout Template</label>
+                <select class="form-select" name="layoutType">
+                    <option th:each="l : ${layoutTypes}" th:value="${l}" th:text="${l}" th:selected="${quotation.layoutType == l}"></option>
+                </select>
+                <small class="text-muted">Choose from 18 layouts</small>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Apply VAT to all items</label>
+                <div class="input-group">
+                    <span class="input-group-text">%</span>
+                    <input type="number" class="form-control" id="bulkVatPercent"
+                           th:value="${defaultVatPercent}" step="0.01" min="0" max="100" placeholder="5">
+                    <button type="button" class="btn btn-outline-primary" id="applyBulkVatBtn">Apply</button>
+                    <button type="button" class="btn btn-outline-secondary" id="clearBulkVatBtn">Clear</button>
+                </div>
+                <small class="text-muted">Fills the VAT field on every product row</small>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">Notes</label>
+            <textarea class="form-control" name="notes" rows="2" th:text="${quotation.notes}"></textarea>
+        </div>
+
+        <hr>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-semibold mb-0">Quotation Items</h5>
+            <span class="text-muted small">Type a product, then press Add. Each row has its own VAT.</span>
+        </div>
+
+        <div class="card bg-light border-0 mb-3">
+            <div class="card-body">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Product / Item name</label>
+                        <input type="text" class="form-control" id="itemName" list="productOptions"
+                               placeholder="Type product name">
+                        <datalist id="productOptions">
+                            <option th:each="name : ${productNames}" th:value="${name}"></option>
+                        </datalist>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-semibold">Qty</label>
+                        <input type="number" class="form-control" id="itemQty" value="1" min="1" step="1">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-semibold">Unit Price (OMR)</label>
+                        <input type="number" class="form-control" id="itemPrice" placeholder="0.000" step="0.001" min="0">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-semibold">Discount (OMR)</label>
+                        <input type="number" class="form-control" id="itemDisc" value="0.000" step="0.001" min="0">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-semibold">VAT %</label>
+                        <input type="number" class="form-control" id="itemVat" placeholder="0.00" step="0.01" min="0" max="100">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-primary w-100" id="addItemBtn">
+                            <i class="bi bi-plus-lg"></i> Add
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle" id="itemsTable">
+                <thead class="table-light">
+                <tr>
+                    <th style="width: 4%">#</th>
+                    <th style="width: 26%">Product / Item</th>
+                    <th style="width: 8%">Qty</th>
+                    <th style="width: 12%">Unit Price (OMR)</th>
+                    <th style="width: 12%">Discount (OMR)</th>
+                    <th style="width: 10%">VAT %</th>
+                    <th style="width: 12%">Line Total (OMR)</th>
+                    <th style="width: 10%">Tax (OMR)</th>
+                    <th style="width: 6%"></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item, iter : ${quotation.items}">
+                    <td class="text-muted" th:text="${iter.count}">1</td>
+                    <td>
+                        <input type="text" class="form-control form-control-sm" list="productOptions"
+                               th:name="|items[${iter.index}].product.name|"
+                               th:value="${item.product?.name}" placeholder="Item name">
+                    </td>
+                    <td><input type="number" class="form-control form-control-sm" th:name="|items[${iter.index}].quantity|"
+                               th:value="${item.quantity}" min="1" step="1" required></td>
+                    <td><input type="number" class="form-control form-control-sm" th:name="|items[${iter.index}].unitPrice|"
+                               th:value="${#numbers.formatDecimal(item.unitPrice != null ? item.unitPrice : 0, 1, 3)}"
+                               step="0.001" min="0" required></td>
+                    <td><input type="number" class="form-control form-control-sm" th:name="|items[${iter.index}].discount|"
+                               th:value="${#numbers.formatDecimal(item.discount != null ? item.discount : 0, 1, 3)}"
+                               step="0.001" min="0"></td>
+                    <td><input type="number" class="form-control form-control-sm" th:name="|items[${iter.index}].vatPercent|"
+                               th:value="${#numbers.formatDecimal(item.vatPercent, 1, 2)}" step="0.01" min="0" max="100"
+                               placeholder="0.00"></td>
+                    <td><input type="text" class="form-control form-control-sm bg-light"
+                               th:name="|items[${iter.index}].lineTotal|"
+                               th:value="${#numbers.formatDecimal(item.lineTotal != null ? item.lineTotal : 0, 1, 3)}" readonly></td>
+                    <td><input type="text" class="form-control form-control-sm bg-light tax-cell"
+                               th:value="${#numbers.formatDecimal(item.taxAmount != null ? item.taxAmount : 0, 1, 3)}" readonly></td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-outline-danger remove-item" title="Remove">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <hr>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="bi bi-check-lg"></i>
+                        <span th:text="${quotation.id != null} ? 'Update' : 'Create'">Create</span>
+                    </button>
+                    <a class="btn btn-secondary px-4" th:href="@{/quotations}">Cancel</a>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-light border-0">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <strong><span id="subtotal" th:text="${#numbers.formatDecimal(quotation.subtotal, 1, 3)}">0.000</span> OMR</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Total Tax (VAT):</span>
+                            <strong><span id="tax" th:text="${#numbers.formatDecimal(quotation.taxAmount, 1, 3)}">0.000</span> OMR</strong>
+                        </div>
+                        <hr class="my-2">
+                        <div class="d-flex justify-content-between fs-5">
+                            <span>Grand Total:</span>
+                            <strong class="text-primary"><span id="total" th:text="${#numbers.formatDecimal(quotation.total, 1, 3)}">0.000</span> OMR</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    (function () {
+        const table = document.getElementById('itemsTable');
+        const tbody = table.querySelector('tbody');
+
+        function val(row, suffix) {
+            const el = row.querySelector('input[name$="' + suffix + '"]');
+            return el ? (parseFloat(el.value) || 0) : 0;
+        }
+
+        function recalcRow(row) {
+            const qty = val(row, '.quantity');
+            const price = val(row, '.unitPrice');
+            const discount = val(row, '.discount');
+            const lineTotal = Math.max(0, qty * price - discount);
+            row.querySelector('input[name$=".lineTotal"]').value = lineTotal.toFixed(3);
+
+            const vatPercent = val(row, '.vatPercent');
+            const tax = Math.round(lineTotal * (vatPercent / 100) * 1000) / 1000;
+            row.querySelector('.tax-cell').value = tax.toFixed(3);
+        }
+
+        function recalcTotals() {
+            let subtotal = 0;
+            let tax = 0;
+            tbody.querySelectorAll('tr').forEach(function (row) {
+                recalcRow(row);
+                subtotal += parseFloat(row.querySelector('input[name$=".lineTotal"]').value) || 0;
+                tax += parseFloat(row.querySelector('.tax-cell').value) || 0;
+            });
+            document.getElementById('subtotal').textContent = subtotal.toFixed(3);
+            document.getElementById('tax').textContent = tax.toFixed(3);
+            document.getElementById('total').textContent = (subtotal + tax).toFixed(3);
+        }
+
+        function renumberItems() {
+            tbody.querySelectorAll('tr').forEach(function (row, idx) {
+                row.querySelectorAll('input').forEach(function (el) {
+                    if (el.name) {
+                        el.name = el.name.replace(/items\[\d+\]/, 'items[' + idx + ']');
+                    }
+                });
+                const badge = row.querySelector('td.text-muted');
+                if (badge) {
+                    badge.textContent = idx + 1;
+                }
+            });
+        }
+
+        function buildRowHtml(index, name, qty, price, discount, vatPercent) {
+            const line = Math.max(0, qty * price - discount);
+            const tax = Math.round(line * (vatPercent / 100) * 1000) / 1000;
+            return '<td class="text-muted">' + (index + 1) + '</td>' +
+                '<td><input type="text" class="form-control form-control-sm" list="productOptions" name="items[' + index + '].product.name" value="' + name + '" placeholder="Item name"></td>' +
+                '<td><input type="number" class="form-control form-control-sm" name="items[' + index + '].quantity" value="' + qty + '" min="1" step="1" required></td>' +
+                '<td><input type="number" class="form-control form-control-sm" name="items[' + index + '].unitPrice" value="' + price.toFixed(3) + '" step="0.001" min="0" required></td>' +
+                '<td><input type="number" class="form-control form-control-sm" name="items[' + index + '].discount" value="' + discount.toFixed(3) + '" step="0.001" min="0"></td>' +
+                '<td><input type="number" class="form-control form-control-sm" name="items[' + index + '].vatPercent" value="' + vatPercent.toFixed(2) + '" step="0.01" min="0" max="100" placeholder="0.00"></td>' +
+                '<td><input type="text" class="form-control form-control-sm bg-light" name="items[' + index + '].lineTotal" value="' + line.toFixed(3) + '" readonly></td>' +
+                '<td><input type="text" class="form-control form-control-sm bg-light tax-cell" value="' + tax.toFixed(3) + '" readonly></td>' +
+                '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger remove-item" title="Remove"><i class="bi bi-trash"></i></button></td>';
+        }
+
+        document.getElementById('addItemBtn').addEventListener('click', function () {
+            const nameInput = document.getElementById('itemName');
+            const name = nameInput.value.trim();
+            if (!name) {
+                nameInput.classList.add('is-invalid');
+                nameInput.focus();
+                return;
+            }
+            nameInput.classList.remove('is-invalid');
+
+            const qty = Math.max(1, parseFloat(document.getElementById('itemQty').value) || 1);
+            const price = Math.max(0, parseFloat(document.getElementById('itemPrice').value) || 0);
+            const discount = Math.max(0, parseFloat(document.getElementById('itemDisc').value) || 0);
+            const vatPercent = Math.min(100, Math.max(0, parseFloat(document.getElementById('itemVat').value) || 0));
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = buildRowHtml(tbody.querySelectorAll('tr').length, name, qty, price, discount, vatPercent);
+            tbody.appendChild(tr);
+
+            nameInput.value = '';
+            document.getElementById('itemPrice').value = '';
+            document.getElementById('itemDisc').value = '0.000';
+            document.getElementById('itemQty').value = '1';
+            nameInput.focus();
+            recalcTotals();
+        });
+
+        document.getElementById('itemName').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('addItemBtn').click();
+            }
+        });
+
+        document.getElementById('applyBulkVatBtn').addEventListener('click', function () {
+            const percent = parseFloat(document.getElementById('bulkVatPercent').value) || 0;
+            tbody.querySelectorAll('tr').forEach(function (row) {
+                row.querySelector('input[name$=".vatPercent"]').value = percent.toFixed(2);
+            });
+            recalcTotals();
+        });
+
+        document.getElementById('clearBulkVatBtn').addEventListener('click', function () {
+            tbody.querySelectorAll('tr').forEach(function (row) {
+                row.querySelector('input[name$=".vatPercent"]').value = '';
+            });
+            recalcTotals();
+        });
+
+        table.addEventListener('input', function (e) {
+            if (e.target.matches('input[name$=".quantity"], input[name$=".unitPrice"], input[name$=".discount"], input[name$=".vatPercent"]')) {
+                recalcRow(e.target.closest('tr'));
+            }
+        });
+
+        table.addEventListener('click', function (e) {
+            const removeBtn = e.target.closest('.remove-item');
+            if (removeBtn) {
+                removeBtn.closest('tr').remove();
+                renumberItems();
+                recalcTotals();
+            }
+        });
+
+        recalcTotals();
+    })();
+</script>
+</body>
+</html>
