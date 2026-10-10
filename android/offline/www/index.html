@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quotation Generator</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="appbar">
+    <span class="brand">📄 Quotation Generator</span>
+    <button class="btn btn-sm btn-outline" style="border-color:#fff;color:#fff" onclick="openForm()">+ New</button>
+</div>
+
+<div class="tabs no-print" id="tabs">
+    <div class="tab active" data-page="quotations" onclick="showPage('quotations')">Quotations</div>
+    <div class="tab" data-page="customers" onclick="showPage('customers')">Customers</div>
+    <div class="tab" data-page="products" onclick="showPage('products')">Products</div>
+    <div class="tab" data-page="company" onclick="showPage('company')">Company</div>
+</div>
+
+<!-- ============ QUOTATIONS LIST ============ -->
+<div id="page-quotations" class="page active">
+    <div class="card no-print">
+        <div class="field" style="margin:0">
+            <input type="search" id="qSearch" placeholder="🔍 Search number / customer…" oninput="renderList()">
+        </div>
+    </div>
+    <div id="quotesList"></div>
+    <div style="height:1rem"></div>
+</div>
+
+<!-- ============ QUOTATION FORM ============ -->
+<div id="page-form" class="page">
+    <div class="card">
+        <h2 class="page-title" id="formTitle">New Quotation</h2>
+        <input type="hidden" id="f_id">
+        <div class="row2">
+            <div class="field"><label>Number</label><input id="f_number" readonly></div>
+            <div class="field"><label>Status</label>
+                <select id="f_status">
+                    <option>DRAFT</option><option>SENT</option><option>APPROVED</option><option>REJECTED</option><option>EXPIRED</option>
+                </select>
+            </div>
+        </div>
+        <div class="row2">
+            <div class="field"><label>Date</label><input type="date" id="f_date"></div>
+            <div class="field"><label>Valid Until</label><input type="date" id="f_validUntil"></div>
+        </div>
+        <div class="field"><label>Layout</label><select id="f_layout"></select></div>
+    </div>
+
+    <div class="card">
+        <h2 class="page-title">Bill To</h2>
+        <div class="field"><input id="f_custName" placeholder="Customer name *" list="customerList"></div>
+        <div class="field"><input id="f_custCompany" placeholder="Company name"></div>
+        <div class="row2">
+            <div class="field"><input id="f_custPhone" placeholder="Phone"></div>
+            <div class="field"><input id="f_custEmail" placeholder="Email"></div>
+        </div>
+        <div class="field"><input id="f_custAddress" placeholder="Address"></div>
+        <datalist id="customerList"></datalist>
+    </div>
+
+    <div class="card">
+        <h2 class="page-title">Items</h2>
+        <table class="items">
+            <thead><tr>
+                <th style="width:34%">Description</th>
+                <th style="width:11%">Qty</th>
+                <th style="width:16%">Price</th>
+                <th style="width:15%">Disc</th>
+                <th style="width:12%">VAT%</th>
+                <th style="width:12%">Tot</th>
+            </tr></thead>
+            <tbody id="itemsBody"></tbody>
+        </table>
+        <button class="btn btn-sm btn-outline" style="margin-top:.6rem" onclick="addItem()">+ Add item</button>
+        <datalist id="productList"></datalist>
+    </div>
+
+    <div class="card">
+        <h2 class="page-title">Notes &amp; Totals</h2>
+        <div class="field"><textarea id="f_notes" rows="2" placeholder="Notes / terms…"></textarea></div>
+        <div class="field"><label><input type="checkbox" id="f_applyVat" onchange="recalc()"> Apply VAT (rate: <span id="vatRateLabel"></span>%)</label></div>
+        <div class="q-totals" style="margin:0;width:100%">
+            <div class="q-tot-row"><span>Subtotal</span><span id="sumSubtotal">0.000</span></div>
+            <div class="q-tot-row"><span>VAT</span><span id="sumVat">0.000</span></div>
+            <div class="q-tot-row q-tot-grand" style="background:#1d4ed8"><span>Total</span><span id="sumTotal">0.000</span></div>
+        </div>
+        <div class="btn-row">
+            <button class="btn btn-primary btn-block" onclick="saveQuotation()">💾 Save Quotation</button>
+        </div>
+    </div>
+    <div style="height:1rem"></div>
+</div>
+
+<!-- ============ QUOTATION VIEW ============ -->
+<div id="page-view" class="page">
+    <div id="quoteDoc"></div>
+    <div style="height:1rem"></div>
+</div>
+
+<!-- ============ CUSTOMERS ============ -->
+<div id="page-customers" class="page">
+    <div class="card no-print">
+        <h2 class="page-title">Customers</h2>
+        <div id="customersList"></div>
+        <button class="btn btn-primary btn-block" onclick="addCustomerForm()">+ Add Customer</button>
+    </div>
+    <div id="customerFormBox"></div>
+    <div style="height:1rem"></div>
+</div>
+
+<!-- ============ PRODUCTS ============ -->
+<div id="page-products" class="page">
+    <div class="card no-print">
+        <h2 class="page-title">Products / Services</h2>
+        <div id="productsList"></div>
+        <button class="btn btn-primary btn-block" onclick="addProductForm()">+ Add Product</button>
+    </div>
+    <div id="productFormBox"></div>
+    <div style="height:1rem"></div>
+</div>
+
+<!-- ============ COMPANY PROFILE ============ -->
+<div id="page-company" class="page">
+    <div class="card no-print">
+        <h2 class="page-title">Company Profile</h2>
+        <div class="field"><label>Company name</label><input id="p_name"></div>
+        <div class="field"><label>Address</label><input id="p_address"></div>
+        <div class="row2">
+            <div class="field"><label>Phone</label><input id="p_phone"></div>
+            <div class="field"><label>Email</label><input id="p_email"></div>
+        </div>
+        <div class="field">
+            <label>Logo</label>
+            <img id="p_logoPreview" class="logo-preview" style="display:none" alt="logo">
+            <input type="file" id="p_logo" accept="image/png,image/jpeg,image/webp" onchange="logoPicked(this)">
+            <button class="btn btn-sm btn-danger" style="margin-top:.5rem" onclick="removeLogo()">Remove logo</button>
+        </div>
+        <div class="field"><label>Default VAT rate (%)</label><input id="p_vat" type="number" min="0" max="100" step="0.01"></div>
+        <div class="btn-row"><button class="btn btn-primary btn-block" onclick="saveCompany()">💾 Save Profile</button></div>
+    </div>
+    <div style="height:1rem"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
