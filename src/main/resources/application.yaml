@@ -2,10 +2,10 @@ spring:
   application:
     name: Quotation-Generator
   datasource:
-    url: jdbc:h2:file:${user.home}/.quotation-generator/data/quotdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: jdbc:mysql://localhost:3306/quotation_db?useSSL=false&allowPublicKeyRetrieval=true&connectionTimeZone=LOCAL
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: quotation_user
+    password: Quotation2026!
   jpa:
     hibernate:
       ddl-auto: update
@@ -13,10 +13,6 @@ spring:
     properties:
       hibernate:
         format_sql: true
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
   servlet:
     multipart:
       max-file-size: 5MB
